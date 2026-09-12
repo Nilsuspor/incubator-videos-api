@@ -5,6 +5,10 @@ import { Video } from "./videos/types/videos";
 import {HttpStatus} from "./core/types/http-statused";
 import { VideoInputDto } from "./videos/dto/video.input.dto";
 import { VideoUpdateInputDto } from "./videos/dto/video.update.input.dto";
+import { validateVideoInputDto } from "./videos/validation/video-input-dto.validation";
+import { createErrorMessages } from "./core/utils/error.utils";
+import { error } from "console";
+
 
 export const setupApp = (app: Express) => {
   app.use(express.json()); 
@@ -30,8 +34,15 @@ export const setupApp = (app: Express) => {
   });
 
   app.post("/videos", 
-    (req: Request<{}, {}, VideoInputDto>, res: Response<Video>) => {
+    (req: Request<{}, {}, VideoInputDto>, res: Response) => {
+     const errors = validateVideoInputDto(req.body) 
+     
+     if (errors.length>0){
+        res.status(HttpStatus.BadRequest).send(createErrorMessages(errors));
+        return
+     }
         
+
     const createdDate = new Date()
     const publicationDate = new Date()
     publicationDate.setDate(createdDate.getDate()+1)
@@ -42,7 +53,7 @@ export const setupApp = (app: Express) => {
         id: lastVideo ? lastVideo.id + 1 : 1,
         title: req.body.title,
         author: req.body.author,
-        canBeDownloaded: true,
+        canBeDownloaded: false,
         minAgeRestriction: null,
         createdAt: createdDate.toISOString(),
         publicationDate: publicationDate.toISOString(),
