@@ -2,7 +2,6 @@ import request from 'supertest';
 import { app } from '../../app';
 
 describe('/videos', () => {
-  // Очищаем базу перед каждым тестом в этой группе
   beforeEach(async () => {
     await request(app)
       .delete('/testing/all-data')
