@@ -8,7 +8,7 @@ import { VideoUpdateInputDto } from "./videos/dto/video.update.input.dto";
 import { validateVideoInputDto } from "./videos/validation/video-input-dto.validation";
 import { createErrorMessages } from "./core/utils/error.utils";
 import { error } from "console";
-
+import { validateVideoUpdateInputDto } from "./videos/validation/video-update-input-dto.validation"; 
 
 export const setupApp = (app: Express) => {
   app.use(express.json()); 
@@ -66,19 +66,26 @@ export const setupApp = (app: Express) => {
   });
 
   app.put("/videos/:id", 
-    (req: Request<{ id: string }, {}, VideoUpdateInputDto>, res: Response<Video>) => {
+    (req: Request<{ id: string }, {}, VideoUpdateInputDto>, res: Response) => {
         const video =db.videos.find((v)=>v.id===+req.params.id)
-
+        
         if (!video){
             res.sendStatus(HttpStatus.NotFound)
             return
         }
+
+        const errors = validateVideoUpdateInputDto(req.body) 
+        if (errors.length>0){
+        res.status(HttpStatus.BadRequest).send(createErrorMessages(errors));
+        return
+     }
+
         video.title = req.body.title
         video.author = req.body.author
         video.availableResolutions = req.body.availableResolutions
         video.canBeDownloaded = req.body.canBeDownloaded
         video.minAgeRestriction = req.body.minAgeRestriction
-        video.publicationDate = new Date().toISOString()
+        video.publicationDate = req.body.publicationDate
         
         res.sendStatus(HttpStatus.NoContent)
         
